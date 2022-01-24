@@ -17,7 +17,7 @@
     virtual_network: "{{ virtualnetwork_name }}"
     address_prefix: "10.0.1.0/24"
 
-- name: Create Network Security Group that allows HTTP
+- name: Create Network Security Group that allows HTTP & HTTPS
   azure_rm_securitygroup:
     resource_group: "{{ resourcegroup_name }}"
     name: "{{ securitygroup_name }}"
@@ -38,14 +38,13 @@
     name: "{{ item.name }}"
     admin_username: "{{ admin_username }}"
     admin_password: "{{ admin_password }}"
-    ssh_password_enabled: false
     ssh_public_keys:
     - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
-      key_data: "{{ lookup('file', '/home/{{ local_user }}/.ssh/ansible-middleware-core.pub') }}"
-    vm_size: " {{ vm_size }}"
+      key_data: "{{ lookup('file', '/home/{{ local_user }}/.ssh/1643057028_7780352.pub') }}"
+    vm_size: "{{ vm_size }}"
     tags:
-      site: "{{ item.site }}"
-      role: "{{ item.role }}"
+      site: "{{ item.site | default(None) }}"
+      role: "{{ item.role | default(None)}}"
     image:
       offer: "{{ offer }}"
       publisher: "{{ publisher }}"
