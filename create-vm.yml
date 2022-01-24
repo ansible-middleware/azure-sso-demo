@@ -1,0 +1,13 @@
+- name: Create Azure VM
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Print a message
+      ansible.builtin.debug:
+        msg: "this task runs before the example role"
+
+    - name: Create VM's on azure.
+      include_role:
+        name: 'azure'
+      vars:
+        local_user: hcheruku

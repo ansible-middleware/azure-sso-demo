@@ -7,10 +7,8 @@ resourcegroup_location: eastus
 admin_username: azureuser 
 admin_password: Password12345
 location: eastus
-local_user: "{ {local_user }}"
 key_data:
 offer: RHEL
 publisher: RedHat
 sku: 8-LVM
-key_data: "{{ lookup('file', '/home/{{ local_user }}/.ssh/ansible-middleware-core.pub') }}"
-vm_size: Standard_DS1_v2
+vm_size: "Standard_D2s_v3"
