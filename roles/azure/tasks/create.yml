@@ -17,30 +17,33 @@
     virtual_network: "{{ virtualnetwork_name }}"
     address_prefix: "10.0.1.0/24"
 
-- name: Create Network Security Group that allows HTTP & HTTPS
-  azure_rm_securitygroup:
+- name: Create public IP address for loadbalancer
+  azure_rm_publicipaddress:
     resource_group: "{{ resourcegroup_name }}"
-    name: "{{ securitygroup_name }}"
-    rules:
-    - name: HTTP
-      protocol: "{{ item.protocol }}"
-      destination_port_range: " {{ item.destination_port_range }}"
-      access: Allow
-      priority: "{{ item.priority }}"
-      direction: Inbound
-  with_items:
-      - { protocol: Tcp, destination_port_range: 80, priority: 100 }
-      - { protocol: Tcp, destination_port_range: 443, priority: 120 }
+    allocation_method: Static
+    name: "{{publicIP}}"
+    domain_name: "{{ domain_name }}"
 
-- name: Create VM
+- name: Create a network interface for loadbalancer
+  azure_rm_networkinterface:
+    name: loadbalancer-nic
+    resource_group: "{{ resourcegroup_name }}"
+    virtual_network: "{{ virtualnetwork_name }}"
+    subnet_name: "{{subnet_name}}"
+    security_group: "{{securitygroup_name}}"
+    public_ip_name: "{{publicIP}}"
+
+- name: Create loadbalancer Virtual Machine
   azure_rm_virtualmachine:
     resource_group: "{{ resourcegroup_name }}"
     name: "{{ item.name }}"
     admin_username: "{{ admin_username }}"
     admin_password: "{{ admin_password }}"
+    open_ports: "{{ item.ports }}"
+    network_interface_names: "loadbalancer-nic"
     ssh_public_keys:
     - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
-      key_data: "{{ lookup('file', '/home/{{ local_user }}/.ssh/1643057028_7780352.pub') }}"
+      key_data: "{{ ssh_private_key_path }}"
     vm_size: "{{ vm_size }}"
     tags:
       site: "{{ item.site | default(None) }}"
@@ -51,7 +54,27 @@
       sku: "{{ sku }}"
       version: latest
   with_items:
-      - { name: 'loadbalancer0', site: 'site0', role: 'loadbalancer' }
+      - { name: 'loadbalancer0', site: 'site0', role: 'loadbalancer', ports: ['443','22']}
+
+- name: Create VM's for database, datagrid and rhsso.
+  azure_rm_virtualmachine:
+    resource_group: "{{ resourcegroup_name }}"
+    name: "{{ item.name }}"
+    admin_username: "{{ admin_username }}"
+    admin_password: "{{ admin_password }}"
+    ssh_public_keys:
+    - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
+      key_data: "{{ ssh_private_key_path }}"
+    vm_size: "{{ vm_size }}"
+    tags:
+      site: "{{ item.site | default(None) }}"
+      role: "{{ item.role | default(None)}}"
+    image:
+      offer: "{{ offer }}"
+      publisher: "{{ publisher }}"
+      sku: "{{ sku }}"
+      version: latest
+  with_items:
       - { name: 'site1-datagrid1', site: 'site1', role: 'datagrid' }
       - { name: 'site1-datagrid2', site: 'site1', role: 'datagrid' }
       - { name: 'site2-datagrid1', site: 'site2', role: 'datagrid' }

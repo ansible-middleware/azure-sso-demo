@@ -6,9 +6,10 @@ securitygroup_name: ansible-middileware-sg
 resourcegroup_location: eastus
 admin_username: azureuser 
 admin_password: Password12345
-location: eastus
-key_data:
 offer: RHEL
 publisher: RedHat
 sku: 8-LVM
 vm_size: "Standard_D2s_v3"
+publicIP: ansible-middileware-ip
+public_ip_address_name: ansible-middileware-public-ip
+domain_name: "rhsso"

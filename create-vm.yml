@@ -10,4 +10,4 @@
       include_role:
         name: 'azure'
       vars:
-        local_user: hcheruku
+        ssh_private_key_path: "{{ lookup('file', '/home/hcheruku/.ssh/1643057028_7780352.pub') }}"
