@@ -8,14 +8,14 @@
   azure_rm_virtualnetwork:
     resource_group: "{{ resourcegroup_name }}"
     name: "{{ virtualnetwork_name }}"
-    address_prefixes: "10.0.0.0/16"
+    address_prefixes: "{{ vn_address_prefixes }}"
 
 - name: Add subnet
   azure_rm_subnet:
     resource_group: "{{ resourcegroup_name }}"
     name: "{{ subnet_name }}"
     virtual_network: "{{ virtualnetwork_name }}"
-    address_prefix: "10.0.1.0/24"
+    address_prefix: "{{ subnet_address_prefixes }}"
 
 - name: Create public IP address for loadbalancer
   azure_rm_publicipaddress:
@@ -52,7 +52,7 @@
       offer: "{{ offer }}"
       publisher: "{{ publisher }}"
       sku: "{{ sku }}"
-      version: latest
+      version: "{{ image_version }}"
   loop: "{{ loadbalancer_creation }}"
 
 - name: Create VM's for database, datagrid and rhsso.
@@ -72,5 +72,5 @@
       offer: "{{ offer }}"
       publisher: "{{ publisher }}"
       sku: "{{ sku }}"
-      version: latest
+      version: "{{ image_version }}"
   loop: "{{ vm_creation_list }}"

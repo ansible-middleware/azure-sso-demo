@@ -9,10 +9,13 @@ admin_password: Password12345
 offer: RHEL
 publisher: RedHat
 sku: 8-LVM
+image_version: "latest"
 vm_size: "Standard_D2s_v3"
 publicIP: ansible-middileware-ip
 public_ip_address_name: ansible-middileware-public-ip
 domain_name: "rhsso"
+vn_address_prefixes: "10.0.0.0/16"
+subnet_address_prefixes: "10.0.1.0/24"
 loadbalancer_creation:
   - name: 'loadbalancer0'
     site: 'site0'
@@ -52,4 +55,16 @@ vm_creation_list:
   - name: 'site2-database1'
     site: 'site2' 
     role: 'database'
-  
+vm_names:
+  - 'loadbalancer0'
+  - 'site1-datagrid1'
+  - 'site1-datagrid2'
+  - 'site2-datagrid1'
+  - 'site2-datagrid2'
+  - 'site1-rhsso1'
+  - 'site1-rhsso2'
+  - 'site2-rhsso1'
+  - 'site2-rhsso2'
+  - 'site1-database1'
+  - 'site1-database2'
+  - 'site2-database1'

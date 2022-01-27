@@ -6,4 +6,6 @@
       include_role:
         name: 'azure'
       vars:
-        ssh_private_key_path: "{{ lookup('file', '/home/hcheruku/.ssh/1643057028_7780352.pub') }}"
+        action: destroy
+
+
