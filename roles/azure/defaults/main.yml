@@ -13,3 +13,43 @@ vm_size: "Standard_D2s_v3"
 publicIP: ansible-middileware-ip
 public_ip_address_name: ansible-middileware-public-ip
 domain_name: "rhsso"
+loadbalancer_creation:
+  - name: 'loadbalancer0'
+    site: 'site0'
+    role: 'loadbalancer'
+    ports: ['443','22']
+vm_creation_list: 
+  - name: 'site1-datagrid1'
+    site: 'site1'
+    role: 'datagrid'
+  - name: 'site1-datagrid2'
+    site: 'site1'
+    role: 'datagrid'
+  - name: 'site2-datagrid1'
+    site: 'site2'
+    role: 'datagrid'
+  - name: 'site2-datagrid2'
+    site: 'site2'
+    role: 'datagrid'
+  - name: 'site1-rhsso1'
+    site: 'site1'
+    role: 'rhsso'
+  - name: 'site1-rhsso2'
+    site: 'site1'
+    role: 'rhsso'
+  - name: 'site2-rhsso1'
+    site: 'site2'
+    role: 'rhsso'
+  - name: 'site2-rhsso2'
+    site: 'site2'
+    role: 'rhsso'
+  - name: 'site1-database1'
+    site: 'site1' 
+    role: 'database'
+  - name: 'site1-database2'
+    site: 'site1' 
+    role: 'database'
+  - name: 'site2-database1'
+    site: 'site2' 
+    role: 'database'
+  
