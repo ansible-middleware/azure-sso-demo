@@ -63,5 +63,3 @@
       - { name: 'site1-database1', site: 'site1', role: 'database' }
       - { name: 'site1-database2', site: 'site1', role: 'database' }
       - { name: 'site2-database1', site: 'site2', role: 'database' }
-
-
