@@ -6,3 +6,9 @@
     remove_on_absent: all_autocreated
     state: absent
   loop: "{{ vm_names }}"
+
+- name: Delete a resource group including resources it contains
+  azure_rm_resourcegroup:
+    name: "{{ resourcegroup_name }}"
+    force_delete_nonempty: yes
+    state: absent
