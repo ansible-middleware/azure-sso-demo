@@ -17,30 +17,26 @@
     virtual_network: "{{ virtualnetwork_name }}"
     address_prefix: "{{ subnet_address_prefixes }}"
 
-- name: Create public IP address for loadbalancer
-  azure_rm_publicipaddress:
-    resource_group: "{{ resourcegroup_name }}"
-    allocation_method: Static
-    name: "{{publicIP}}"
-    domain_name: "{{ domain_name }}"
-
-- name: Create a network interface for loadbalancer
+- name: Create a network interface
   azure_rm_networkinterface:
-    name: loadbalancer-nic
+    name: "{{ item }}"
     resource_group: "{{ resourcegroup_name }}"
     virtual_network: "{{ virtualnetwork_name }}"
     subnet_name: "{{subnet_name}}"
-    security_group: "{{securitygroup_name}}"
-    public_ip_name: "{{publicIP}}"
+    ip_configurations:
+      - name: "{{ item }}"
+        public_ip_address_name: "{{ item }}"
+        primary: True
+  loop: "{{ nic }}"
 
-- name: Create loadbalancer Virtual Machine
+- name: Create Virtual Machine
   azure_rm_virtualmachine:
     resource_group: "{{ resourcegroup_name }}"
     name: "{{ item.name }}"
     admin_username: "{{ admin_username }}"
     admin_password: "{{ admin_password }}"
-    open_ports: "{{ item.ports }}"
-    network_interface_names: "loadbalancer-nic"
+    open_ports: "{{ item.ports | default(omit) }}"
+    network_interface_names: "{{ item.role }}"
     ssh_public_keys:
     - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
       key_data: "{{ ssh_private_key_path }}"
@@ -53,24 +49,4 @@
       publisher: "{{ publisher }}"
       sku: "{{ sku }}"
       version: "{{ image_version }}"
-  loop: "{{ loadbalancer_creation }}"
-
-- name: Create VM's for database, datagrid and rhsso.
-  azure_rm_virtualmachine:
-    resource_group: "{{ resourcegroup_name }}"
-    name: "{{ item.name }}"
-    admin_username: "{{ admin_username }}"
-    admin_password: "{{ admin_password }}"
-    ssh_public_keys:
-    - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
-      key_data: "{{ ssh_private_key_path }}"
-    vm_size: "{{ vm_size }}"
-    tags:
-      site: "{{ item.site | default(None) }}"
-      role: "{{ item.role | default(None)}}"
-    image:
-      offer: "{{ offer }}"
-      publisher: "{{ publisher }}"
-      sku: "{{ sku }}"
-      version: "{{ image_version }}"
-  loop: "{{ vm_creation_list }}"
+  loop: "{{ vm }}"

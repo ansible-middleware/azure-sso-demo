@@ -1,9 +1,10 @@
 - name: Create Azure VM
   hosts: localhost
+  gather_facts: false
   connection: local
   tasks:
     - name: Create VM's on azure.
       include_role:
         name: 'azure'
       vars:
-        ssh_private_key_path: "{{ lookup('file', '/home/hcheruku/.ssh/1643057028_7780352.pub') }}"
+        ssh_private_key_path: "{{ ssh_key | default(lookup('env', 'HOME') + '/.ssh/id_rsa.pub')}}"
