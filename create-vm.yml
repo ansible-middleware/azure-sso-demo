@@ -2,9 +2,20 @@
   hosts: localhost
   gather_facts: false
   connection: local
+  vars:
+    repo_url: "https://github.com/ansible-middleware/azure-sso-demo.git"
+    branch: azure
   tasks:
+    - name: Git checkout
+      ansible.builtin.git:
+        repo: "{{ repo_url }}"
+        dest: "{{ playbook_dir }}/cross-dc-rhsso-demo"
+        version: "{{ branch }}"
+        clone: yes
+        update: yes
+
     - name: Create VM's on azure.
       include_role:
         name: 'azure'
       vars:
-        ssh_private_key_path: "{{ ssh_key | default(lookup('env', 'HOME') + '/.ssh/id_rsa.pub')}}"
+        ssh_key_path: "{{ ssh_key | default(lookup('env', 'HOME') + '/.ssh/id_rsa.pub')}}"

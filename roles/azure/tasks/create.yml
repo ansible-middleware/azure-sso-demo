@@ -17,17 +17,28 @@
     virtual_network: "{{ virtualnetwork_name }}"
     address_prefix: "{{ subnet_address_prefixes }}"
 
+- name: Create security groups
+  azure_rm_securitygroup:
+  rules:
+      resource_group: "{{ resourcegroup_name }}"
+      name: "{{ item.name }}"
+      protocol: "{{ item.protocol }}"
+      destination_port_range: "{{ item.destination_port_range }}"
+      priority: "{{ item.priority }}"
+  loop: "{{ nsg }}"
+
 - name: Create a network interface
   azure_rm_networkinterface:
-    name: "{{ item }}"
+    name: "{{ item.name }}"
     resource_group: "{{ resourcegroup_name }}"
     virtual_network: "{{ virtualnetwork_name }}"
     subnet_name: "{{subnet_name}}"
+    security_group: "{{ item.role }}"
     ip_configurations:
-      - name: "{{ item }}"
-        public_ip_address_name: "{{ item }}"
+      - name: "{{ item.name }}"
+        public_ip_address_name: "{{ item.name }}-ip"
         primary: True
-  loop: "{{ nic }}"
+  loop: "{{ vm }}"
 
 - name: Create Virtual Machine
   azure_rm_virtualmachine:
@@ -35,11 +46,10 @@
     name: "{{ item.name }}"
     admin_username: "{{ admin_username }}"
     admin_password: "{{ admin_password }}"
-    open_ports: "{{ item.ports | default(omit) }}"
     network_interface_names: "{{ item.role }}"
     ssh_public_keys:
     - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
-      key_data: "{{ ssh_private_key_path }}"
+      key_data: "{{ ssh_key_path }}"
     vm_size: "{{ vm_size }}"
     tags:
       site: "{{ item.site | default(None) }}"
