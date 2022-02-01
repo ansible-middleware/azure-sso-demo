@@ -3,7 +3,7 @@
   gather_facts: false
   connection: local
   vars:
-    repo_url: "https://github.com/ansible-middleware/azure-sso-demo.git"
+    repo_url: "https://github.com/ansible-middleware/cross-dc-rhsso-demo.git"
     branch: azure
   tasks:
     - name: Git checkout
@@ -11,6 +11,7 @@
         repo: "{{ repo_url }}"
         dest: "{{ playbook_dir }}/cross-dc-rhsso-demo"
         version: "{{ branch }}"
+        single_branch: yes
         clone: yes
         update: yes
 
@@ -19,3 +20,6 @@
         name: 'azure'
       vars:
         ssh_key_path: "{{ ssh_key | default(lookup('env', 'HOME') + '/.ssh/id_rsa.pub')}}"
+
+    - name: Run cross-dc-rhsso-demo
+      import_playbook: cross-dc-rhsso-demo/playbooks/all.yml
