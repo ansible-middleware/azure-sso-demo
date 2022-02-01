@@ -1,3 +1,4 @@
 *.log
 rhn-creds.yml
 cross-dc-rhsso-demo/
+*.zip

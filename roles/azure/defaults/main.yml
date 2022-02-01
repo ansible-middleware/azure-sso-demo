@@ -16,27 +16,46 @@ public_ip_address_name: ansible-middileware-public-ip
 domain_name: "rhsso"
 vn_address_prefixes: "10.0.0.0/16"
 subnet_address_prefixes: "10.0.1.0/24"
-nsg: 
-  - name: loadbalancer
-    destination_port_range: ['22', '443']
-    priority: 100
-    protocol: Tcp
-  - name: datagrid
-    destination_port_range: ['22']
-    priority: 100
-    rotocol: Tcp
-  - name: rhsso
-    destination_port_range: ['22']
-    priority: 100
-    rotocol: Tcp
-  - name: database
-    destination_port_range: ['22']
-    priority: 100
-    rotocol: Tcp
+security:
+  groups:
+    loadbalancer:
+      rules:
+        - name: 'ssh'
+          destination_port_range: '22'
+          priority: 101
+          protocol: Tcp
+          direction: Inbound
+        - name: https
+          destination_port_range: '443'
+          priority: 102
+          protocol: Tcp
+          direction: Inbound
+    datagrid:
+      rules:
+        - name: 'ssh'
+          destination_port_range: '22'
+          priority: 101
+          protocol: Tcp
+          direction: Inbound
+    rhsso:
+      rules:
+        - name: 'ssh'
+          destination_port_range: '22'
+          priority: 101
+          protocol: Tcp
+          direction: Inbound
+    database:
+      rules:
+        - name: 'ssh'
+          destination_port_range: '22'
+          priority: 101
+          protocol: Tcp
+          direction: Inbound
 vm:
   - name: 'loadbalancer0'
     site: 'site0'
     role: 'loadbalancer'
+    domain_name: 'rhsso'
   - name: 'site1-datagrid1'
     site: 'site1'
     role: 'datagrid'

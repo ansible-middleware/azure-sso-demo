@@ -20,13 +20,19 @@
 - name: Create security groups
   azure_rm_securitygroup:
     resource_group: "{{ resourcegroup_name }}"
-    name: "{{ item.name }}"
-    rules:
-      name: "{{ item.name }}"
-      protocol: "{{ item.protocol }}"
-      destination_port_range: "{{ item.destination_port_range }}"
-      priority: "{{ item.priority }}"
-  loop: "{{ nsg }}"
+    name: "{{ sg.key }}"
+    rules: "{{ sg.value.rules }}"
+  loop: "{{ security.groups | dict2items }}"
+  loop_control:
+    loop_var: sg
+
+- name: Create public IP address
+  azure_rm_publicipaddress:
+    resource_group: "{{ resourcegroup_name }}"
+    allocation_method: Static
+    name: "{{ item.name }}-ip"
+    domain_name: "{{ item.domain_name | default(omit)}}"
+  loop: "{{ vm }}"
 
 - name: Create a network interface
   azure_rm_networkinterface:
@@ -35,10 +41,7 @@
     virtual_network: "{{ virtualnetwork_name }}"
     subnet_name: "{{subnet_name}}"
     security_group: "{{ item.role }}"
-    ip_configurations:
-      - name: "{{ item.name }}"
-        public_ip_address_name: "{{ item.name }}-ip"
-        primary: True
+    public_ip_name: "{{ item.name }}-ip"
   loop: "{{ vm }}"
 
 - name: Create Virtual Machine
@@ -47,7 +50,7 @@
     name: "{{ item.name }}"
     admin_username: "{{ admin_username }}"
     admin_password: "{{ admin_password }}"
-    network_interface_names: "{{ item.role }}"
+    network_interface_names: "{{ item.name }}"
     ssh_public_keys:
     - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
       key_data: "{{ ssh_key_path }}"
