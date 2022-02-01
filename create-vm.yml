@@ -21,5 +21,5 @@
       vars:
         ssh_key_path: "{{ ssh_key | default(lookup('env', 'HOME') + '/.ssh/id_rsa.pub')}}"
 
-    - name: Run cross-dc-rhsso-demo
-      import_playbook: cross-dc-rhsso-demo/playbooks/all.yml
+- name: Run cross-dc-rhsso-demo
+  import_playbook: cross-dc-rhsso-demo/playbooks/all.yml

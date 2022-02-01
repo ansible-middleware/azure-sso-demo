@@ -19,8 +19,9 @@
 
 - name: Create security groups
   azure_rm_securitygroup:
-  rules:
-      resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ resourcegroup_name }}"
+    name: "{{ item.name }}"
+    rules:
       name: "{{ item.name }}"
       protocol: "{{ item.protocol }}"
       destination_port_range: "{{ item.destination_port_range }}"
