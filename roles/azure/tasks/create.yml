@@ -26,6 +26,20 @@
   loop_control:
     loop_var: sg
 
+- name: Create a private DNS zone
+  azure.azcollection.azure_rm_privatednszone:
+    resource_group: "{{ resourcegroup_name }}"
+    name: "{{ privatednszone }}"
+
+- name: Update virtual network link
+  azure.azcollection.azure_rm_privatednszonelink:
+    resource_group: "{{ resourcegroup_name }}"
+    name: vn_ansible_middileware_link
+    zone_name: "{{ privatednszone }}"
+    virtual_network: "{{ virtualnetwork_name }}"
+    registration_enabled: yes
+    state: present
+
 - name: Create public IP address
   azure_rm_publicipaddress:
     resource_group: "{{ resourcegroup_name }}"
