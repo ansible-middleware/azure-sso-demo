@@ -17,6 +17,9 @@ domain_name: "rhsso"
 vn_address_prefixes: "10.0.0.0/16"
 subnet_address_prefixes: "10.0.1.0/24"
 privatednszone: "internal.ansiblemiddleware.com"
+relative_name: "www"
+record_type: "A"
+loadbalancer_ip: "loadbalancer0-ip"
 security:
   groups:
     loadbalancer:

@@ -78,3 +78,18 @@
       sku: "{{ sku }}"
       version: "{{ image_version }}"
   loop: "{{ vm }}"
+
+- name: Get public ip info of Loadbalancer.
+  azure_rm_publicipaddress_info:
+    resource_group: "{{ resourcegroup_name }}"
+    name: "{{ loadbalancer_ip }}"
+  register: ip_info
+
+- name: Link public DNS to loadbalancer.
+  azure_rm_dnsrecordset:
+    resource_group: "{{ resourcegroup_name }}"
+    relative_name: "{{ relative_name }}"
+    zone_name: "{{ dns_name }}"
+    record_type: "{{ record_type }}"
+    records:
+      - entry: "{{ip_info.publicipaddresses.0.ip_address}}"
