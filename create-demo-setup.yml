@@ -15,11 +15,10 @@
         clone: yes
         update: yes
 
-    - name: Create VM's on azure.
+    - name: Create demo resources on azure.
       include_role:
         name: 'azure'
       vars:
-        #ssh_key_path: "{{ lookup('file', '/home/hcheruku/.ssh/1643057028_7780352.pub') }}"
         ssh_key_path: "{{ ssh_key | default(lookup('env', 'HOME') + '/.ssh/id_rsa.pub')}}"
         dns_name: "azuredemos.ansiblemiddleware.com" # This is optional
 

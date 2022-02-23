@@ -1,7 +1,7 @@
 ---
 - name: Remove a VM and all resources that were autocreated
   azure_rm_virtualmachine:
-    resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ item.resourcegroup_name }}"
     name: "{{ item.name }}"
     remove_on_absent: all_autocreated
     state: absent
@@ -9,6 +9,7 @@
 
 - name: Delete a resource group including resources it contains
   azure_rm_resourcegroup:
-    name: "{{ resourcegroup_name }}"
+    name: "{{ item.name }}"
     force_delete_nonempty: yes
     state: absent
+  loop: "{{ resource_groups }}"

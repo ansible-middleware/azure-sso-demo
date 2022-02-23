@@ -1,25 +1,37 @@
 ---
 - name: Create resource group
   azure_rm_resourcegroup:
-    name: "{{ resourcegroup_name }}"
-    location: "{{ resourcegroup_location }}"
+    name: "{{ item.name }}"
+    location: "{{ item.location }}"
+  loop: "{{ resource_groups }}"
 
 - name: Create virtual network
   azure_rm_virtualnetwork:
-    resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ item.name }}"
     name: "{{ virtualnetwork_name }}"
-    address_prefixes: "{{ vn_address_prefixes }}"
+    address_prefixes: "{{ item.address_prefixes }}"
+  loop: "{{ resource_groups }}"
 
 - name: Add subnet
   azure_rm_subnet:
-    resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ item.name }}"
     name: "{{ subnet_name }}"
     virtual_network: "{{ virtualnetwork_name }}"
-    address_prefix: "{{ subnet_address_prefixes }}"
+    address_prefix: "{{ item.address_prefixes }}"
+  loop: "{{ resource_groups }}"
 
-- name: Create security groups
+- name: Create security groups for RG1
   azure_rm_securitygroup:
-    resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ resource_groups.0.name }}"
+    name: "{{ sg.key }}"
+    rules: "{{ sg.value.rules }}"
+  loop: "{{ security.groups | dict2items }}"
+  loop_control:
+    loop_var: sg
+
+- name: Create security groups for RG2
+  azure_rm_securitygroup:
+    resource_group: "{{ resource_groups.1.name }}"
     name: "{{ sg.key }}"
     rules: "{{ sg.value.rules }}"
   loop: "{{ security.groups | dict2items }}"
@@ -28,21 +40,24 @@
 
 - name: Create a private DNS zone
   azure.azcollection.azure_rm_privatednszone:
-    resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ item.name }}"
     name: "{{ privatednszone }}"
+  loop: "{{ resource_groups }}"
+  
 
 - name: Update virtual network link
   azure.azcollection.azure_rm_privatednszonelink:
-    resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ item.name }}"
     name: vn_ansible_middileware_link
     zone_name: "{{ privatednszone }}"
     virtual_network: "{{ virtualnetwork_name }}"
     registration_enabled: yes
     state: present
+  loop: "{{ resource_groups }}"
 
 - name: Create public IP address
   azure_rm_publicipaddress:
-    resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ item.resourcegroup_name }}"
     allocation_method: Static
     name: "{{ item.name }}-ip"
     domain_name: "{{ item.domain_name | default(omit)}}"
@@ -51,7 +66,7 @@
 - name: Create a network interface
   azure_rm_networkinterface:
     name: "{{ item.name }}"
-    resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ item.resourcegroup_name }}"
     virtual_network: "{{ virtualnetwork_name }}"
     subnet_name: "{{subnet_name}}"
     security_group: "{{ item.role }}"
@@ -60,7 +75,7 @@
 
 - name: Create Virtual Machine
   azure_rm_virtualmachine:
-    resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ item.resourcegroup_name }}"
     name: "{{ item.name }}"
     admin_username: "{{ admin_username }}"
     admin_password: "{{ admin_password }}"
@@ -79,17 +94,60 @@
       version: "{{ image_version }}"
   loop: "{{ vm }}"
 
-- name: Get public ip info of Loadbalancer.
-  azure_rm_publicipaddress_info:
-    resource_group: "{{ resourcegroup_name }}"
-    name: "{{ loadbalancer_ip }}"
-  register: ip_info
+- name: Create Initial virtual network peering
+  azure_rm_virtualnetworkpeering:
+    resource_group: "{{ resource_groups.0.name }}"
+    virtual_network: "{{ virtualnetwork_name }}"
+    name: "{{ vn_peering_name }}"
+    remote_virtual_network:
+      resource_group: "{{ resource_groups.1.name }}"
+      name: "{{ virtualnetwork_name }}"
+    allow_virtual_network_access: "{{ allow_virtual_network_access }}"
+    allow_forwarded_traffic: "{{ allow_forwarded_traffic }}"
 
-- name: Link public DNS to loadbalancer.
+- name: Connect virtual network peering
+  azure_rm_virtualnetworkpeering:
+    resource_group: "{{ resource_groups.1.name }}"
+    virtual_network: "{{ virtualnetwork_name }}"
+    name: "{{ vn_peering_name }}"
+    remote_virtual_network:
+      resource_group: "{{ resource_groups.0.name }}"
+      name: "{{ virtualnetwork_name }}"
+    allow_virtual_network_access: "{{ allow_virtual_network_access }}"
+    allow_forwarded_traffic: "{{ allow_forwarded_traffic }}"
+
+- name: Create a DNS zone
+  azure_rm_dnszone:
+    resource_group: "{{ item.name }}"
+    name: "{{ dns_name }}"
+  loop: "{{ resource_groups }}"
+
+- name: Create a traffic manager profile
+  azure.azcollection.azure_rm_trafficmanager:
+    name: "{{ traffic_manager_name }}"
+    resource_group: "{{ traffic_manager_resource_group }}"
+    profile_status: "{{ profile_status }}"
+    dns_config:
+      relative_name: "{{ traffic_manager_name }}"
+      ttl: "{{ ttl }}"
+    monitor_config:
+      protocol: "{{ protocol }}"
+      port: "{{ port }}"
+      path: "{{ path }}"
+      timeout_in_seconds: "{{ timeout_in_seconds }}"
+      interval_in_seconds: "{{ interval_in_seconds }}"
+      tolerated_number_of_failures: "{{ tolerated_number_of_failures }}"
+    endpoints: "{{ tm.value }}"
+  loop: "{{ traffic_manager.groups | dict2items }}"
+  loop_control:
+    loop_var: tm
+
+- name: Link public DNS to Traffic Manager.
   azure_rm_dnsrecordset:
-    resource_group: "{{ resourcegroup_name }}"
+    resource_group: "{{ item.name }}"
     relative_name: "{{ relative_name }}"
     zone_name: "{{ dns_name }}"
     record_type: "{{ record_type }}"
     records:
-      - entry: "{{ip_info.publicipaddresses.0.ip_address}}"
+      - entry: "{{ entry }}"
+  loop: "{{ resource_groups }}"

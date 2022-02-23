@@ -1,9 +1,7 @@
 ---
-resourcegroup_name: ansible-middileware-rg
 virtualnetwork_name: ansible-middileware-vn
 subnet_name: ansible-middileware-subnet
 securitygroup_name: ansible-middileware-sg
-resourcegroup_location: eastus
 admin_username: azureuser 
 admin_password: Password12345
 offer: RHEL
@@ -14,12 +12,47 @@ vm_size: "Standard_D2s_v3"
 publicIP: ansible-middileware-ip
 public_ip_address_name: ansible-middileware-public-ip
 domain_name: "rhsso"
-vn_address_prefixes: "10.0.0.0/16"
-subnet_address_prefixes: "10.0.1.0/24"
 privatednszone: "internal.ansiblemiddleware.com"
-relative_name: "www"
-record_type: "A"
+vn_peering_name: "eastus-centralus-peering"
+allow_virtual_network_access: true
+allow_forwarded_traffic: true
+# Traffic Manager info
+traffic_manager:
+      groups:
+        endpoints:
+        - name: site1
+          type: "Microsoft.Network/trafficManagerProfiles/azureEndpoints"
+          endpoint_status: Enabled
+          target_resource_id : "/subscriptions/fcb01633-9799-4410-9ec8-f632c867b0f3/resourceGroups/ansible-middileware-eastus-rg/providers/Microsoft.Network/publicIPAddresses/site1-loadbalancer-ip"
+        - name: site2
+          type: "Microsoft.Network/trafficManagerProfiles/azureEndpoints"
+          endpoint_status: Enabled
+          target_resource_id : "/subscriptions/fcb01633-9799-4410-9ec8-f632c867b0f3/resourceGroups/ansible-middileware-centralus-rg/providers/Microsoft.Network/publicIPAddresses/site2-loadbalancer-ip"
+traffic_manager_name: rhsso-ansible-middleware
+traffic_manager_resource_group: ansible-middileware-eastus-rg
+profile_status: Enabled
+traffic_manager_relative_name: rhsso-ansible-middleware
+ttl: 60
+protocol: HTTPS
+port: 443
+path: '/'
+timeout_in_seconds: 10
+interval_in_seconds: 30
+tolerated_number_of_failures: 3
+#Link public DNS to loadbalancr
+relative_name: "rhsso"
+record_type: "CNAME"
+entry: "rhsso-ansible-middleware.trafficmanager.net"
+dns_name: "azuredemos.ansiblemiddleware.com"
 loadbalancer_ip: "loadbalancer0-ip"
+#Resource Group info
+resource_groups:
+  - name: ansible-middileware-eastus-rg
+    location: eastus
+    address_prefixes: "10.1.0.0/24"
+  - name: ansible-middileware-centralus-rg
+    location: centralus
+    address_prefixes: "10.2.0.0/24"
 security:
   groups:
     loadbalancer:
@@ -56,40 +89,70 @@ security:
           protocol: Tcp
           direction: Inbound
 vm:
-  - name: 'loadbalancer0'
-    site: 'site0'
+  - name: 'site1-loadbalancer'
+    site: 'site1'
     role: 'loadbalancer'
+    resourcegroup_name: ansible-middileware-eastus-rg
+    resourcegroup_location: eastus
+    domain_name: 'rhsso'
+  - name: 'site2-loadbalancer'
+    site: 'site2'
+    role: 'loadbalancer'
+    resourcegroup_name: ansible-middileware-centralus-rg
+    resourcegroup_location: centralus
     domain_name: 'rhsso'
   - name: 'site1-datagrid1'
     site: 'site1'
     role: 'datagrid'
+    resourcegroup_name: ansible-middileware-eastus-rg
+    resourcegroup_location: eastus
   - name: 'site1-datagrid2'
     site: 'site1'
     role: 'datagrid'
+    resourcegroup_name: ansible-middileware-eastus-rg
+    resourcegroup_location: eastus
   - name: 'site2-datagrid1'
     site: 'site2'
     role: 'datagrid'
+    resourcegroup_name: ansible-middileware-centralus-rg
+    resourcegroup_location: centralus
   - name: 'site2-datagrid2'
     site: 'site2'
     role: 'datagrid'
+    resourcegroup_name: ansible-middileware-centralus-rg
+    resourcegroup_location: centralus
   - name: 'site1-rhsso1'
     site: 'site1'
     role: 'rhsso'
+    resourcegroup_name: ansible-middileware-eastus-rg
+    resourcegroup_location: eastus
   - name: 'site1-rhsso2'
     site: 'site1'
     role: 'rhsso'
+    resourcegroup_name: ansible-middileware-eastus-rg
+    resourcegroup_location: eastus
   - name: 'site2-rhsso1'
     site: 'site2'
     role: 'rhsso'
+    resourcegroup_name: ansible-middileware-centralus-rg
+    resourcegroup_location: centralus
   - name: 'site2-rhsso2'
     site: 'site2'
     role: 'rhsso'
+    resourcegroup_name: ansible-middileware-centralus-rg
+    resourcegroup_location: centralus
   - name: 'site1-database1'
-    site: 'site1' 
+    site: 'site1'
+    resourcegroup_name: ansible-middileware-eastus-rg
+    resourcegroup_location: eastus
     role: 'database'
   - name: 'site1-database2'
     site: 'site1' 
     role: 'database'
+    resourcegroup_name: ansible-middileware-eastus-rg
+    resourcegroup_location: eastus
   - name: 'site2-database1'
     site: 'site2' 
     role: 'database'
+    resourcegroup_name: ansible-middileware-centralus-rg
+    resourcegroup_location: centralus
