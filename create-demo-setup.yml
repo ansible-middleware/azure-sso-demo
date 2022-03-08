@@ -20,7 +20,12 @@
         name: 'azure'
       vars:
         ssh_key_path: "{{ ssh_key | default(lookup('env', 'HOME') + '/.ssh/id_rsa.pub')}}"
+        #ssh_key_path: "{{ lookup('file', '/home/hcheruku/.ssh/1643057028_7780352.pub') }}"
         dns_name: "azuredemos.ansiblemiddleware.com" # This is optional
+    
+    - meta: refresh_inventory
+    - pause:
+        minutes: 1
 
 - name: Run cross-dc-rhsso-demo
   import_playbook: cross-dc-rhsso-demo/playbooks/all.yml
