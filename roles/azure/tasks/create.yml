@@ -93,24 +93,69 @@
       sku: "{{ sku }}"
       version: "{{ image_version }}"
   loop: "{{ vm }}"
-  
-- name: Create MariaDB server instances
-  azure_rm_mariadbserver:
-    resource_group: "{{ item.resourcegroup_name }}"
-    name: "{{ item.name }}"
-    sku:
-      name: "{{ db_sku_name }}"
-      tier: "{{ db_sku_tier }}"
-    location: "{{ item.resourcegroup_location }}"
-    storage_mb: "{{ db_storage_mb }}"
-    # enforce_ssl: "{{ db_enforce_ssl }}"
-    version: "{{ db_version }}"
-    admin_username: "{{ db_admin_username }}"
-    admin_password: "{{ db_admin_password }}"
-    tags:
-      site: "{{ item.site | default(None) }}"
-      role: "{{ item.role | default(None)}}"
-  loop: "{{ db }}"
+
+- name: Config for unmanaged mariadb database
+  block:
+    - name: Create Vm's for unmanaged mariadb database
+      azure_rm_virtualmachine:
+        resource_group: "{{ item.resourcegroup_name }}"
+        name: "{{ item.name }}"
+        admin_username: "{{ admin_username }}"
+        admin_password: "{{ admin_password }}"
+        network_interface_names: "{{ item.name }}"
+        ssh_public_keys:
+        - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
+          key_data: "{{ ssh_key_path }}"
+        vm_size: "{{ vm_size }}"
+        tags:
+          site: "{{ item.site | default(None) }}"
+          role: "{{ item.role | default(None)}}"
+        image:
+          offer: "{{ offer }}"
+          publisher: "{{ publisher }}"
+          sku: "{{ sku }}"
+          version: "{{ image_version }}"
+      loop: "{{ db_vm }}"
+  when: not managed_mariadb
+
+- name: Install, configure and managed mariadb database
+  block:
+    - name: Create MariaDB server instances
+      azure_rm_mariadbserver:
+        resource_group: "{{ item.resourcegroup_name }}"
+        name: "{{ item.name }}"
+        sku:
+          name: "{{ db_sku_name }}"
+          tier: "{{ db_sku_tier }}"
+        location: "{{ item.resourcegroup_location }}"
+        storage_mb: "{{ db_storage_mb }}"
+        # enforce_ssl: "{{ db_enforce_ssl }}"
+        version: "{{ db_version }}"
+        admin_username: "{{ db_admin_username }}"
+        admin_password: "{{ db_admin_password }}"
+        tags:
+          site: "{{ item.site | default(None) }}"
+          role: "{{ item.role | default(None)}}"
+      loop: "{{ db }}"
+
+    - name: Create MariaDB firewall rule
+      azure_rm_mariadbfirewallrule:
+        resource_group: "{{ item.resourcegroup_name }}"
+        server_name: "{{ item.name }}"
+        name: "{{ item.name }}-rule"
+        start_ip_address: "{{ item.start_ip_address }}"
+        end_ip_address: "{{ item.end_ip_address }}"
+      loop: "{{ db }}"
+
+    - name: Create keycloak Database
+      azure_rm_mariadbdatabase:
+        resource_group: "{{ item.resourcegroup_name }}"
+        server_name: "{{ item.name }}"
+        name: "{{ item.database }}"
+        charset: "utf8"
+        force_update: true
+      loop: "{{ db }}"
+  when: managed_mariadb
 
 - name: Create Initial virtual network peering
   azure_rm_virtualnetworkpeering:
@@ -133,25 +178,6 @@
       name: "{{ virtualnetwork_name }}"
     allow_virtual_network_access: "{{ allow_virtual_network_access }}"
     allow_forwarded_traffic: "{{ allow_forwarded_traffic }}"
-
-- name: Create MariaDB firewall rule
-  azure_rm_mariadbfirewallrule:
-    resource_group: "{{ item.resourcegroup_name }}"
-    server_name: "{{ item.name }}"
-    name: "{{ item.name }}-rule"
-    start_ip_address: "{{ item.start_ip_address }}"
-    end_ip_address: "{{ item.end_ip_address }}"
-  loop: "{{ db }}"
-
-- name: Create keycloak Database
-  azure_rm_mariadbdatabase:
-    resource_group: "{{ item.resourcegroup_name }}"
-    server_name: "{{ item.name }}"
-    name: "{{ item.database }}"
-    charset: "utf8"
-    force_update: true
-  loop: "{{ db }}"
-
 
 - name: Create a DNS zone
   azure_rm_dnszone:

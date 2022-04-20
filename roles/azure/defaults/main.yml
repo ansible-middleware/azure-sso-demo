@@ -141,6 +141,22 @@ vm:
     role: 'rhsso'
     resourcegroup_name: ansible-middileware-centralus-rg
     resourcegroup_location: centralus
+db_vm:
+  - name: 'site1-database1'
+    site: 'site1'
+    resourcegroup_name: ansible-middileware-eastus-rg
+    resourcegroup_location: eastus
+    role: 'database'
+  - name: 'site1-database2'
+    site: 'site1' 
+    role: 'database'
+    resourcegroup_name: ansible-middileware-eastus-rg
+    resourcegroup_location: eastus
+  - name: 'site2-database1'
+    site: 'site2' 
+    role: 'database'
+    resourcegroup_name: ansible-middileware-centralus-rg
+    resourcegroup_location: centralus
 db:
   - name: 'site1-database1'
     site: 'site1'
@@ -150,20 +166,6 @@ db:
     start_ip_address: '0.0.0.0'
     end_ip_address: '255.255.255.255'
     database: keycloak
-  # - name: 'site1-database2'
-  #   site: 'site1' 
-  #   role: 'database'
-  #   resourcegroup_name: ansible-middileware-eastus-rg
-  #   resourcegroup_location: eastus
-  #   start_ip_address: '10.1.0.0'
-  #   end_ip_address: '10.1.0.24'
-  # - name: 'site2-database1'
-  #   site: 'site2' 
-  #   role: 'database'
-  #   resourcegroup_name: ansible-middileware-centralus-rg
-  #   resourcegroup_location: centralus
-  #   start_ip_address: '10.2.0.0'
-  #   end_ip_address: '10.2.0.24'
 db_sku_name: 'B_Gen5_2'
 db_sku_tier: 'Basic'
 db_storage_mb: '5120'
